@@ -6,6 +6,9 @@ import pandas as pd
 from src.config import CFG
 from src.llm.store import save_regime_store
 from src.llm.oracle_local import local_regime_from_summary
+from src.text.mock_news import load_mock_news
+from src.text.encoder import NewsEncoder
+from src.text.select_bullets import select_representative_bullets
 
 
 def load_returns(path="data/processed/returns.parquet"):
@@ -38,6 +41,10 @@ def main():
 
     news_df = load_news_features()
 
+    news_map = load_mock_news(ret_idx)
+    encoder = NewsEncoder(model_name="all-MiniLM-L6-v2", device="cpu")
+
+
     # Cache to avoid re-querying the model
     cache_path = "data/processed/regime_features_local_cache.jsonl"
     cache = {}
@@ -50,8 +57,8 @@ def main():
     rows, idx = [], []
     new_lines = []
 
-    # for t in range(CFG.window, len(rets) - 2):
-    for t in range(CFG.window, min(len(rets) - 2, CFG.window + 5)):
+    for t in range(CFG.window, len(rets) - 2):
+    # for t in range(CFG.window, min(len(rets) - 2, CFG.window + 5)):
         dt = pd.to_datetime(ret_idx[t])
         dt_str = dt.strftime("%Y-%m-%d")
 
@@ -72,14 +79,24 @@ def main():
         if dt_str in cache:
             feat = cache[dt_str]
         else:
+            texts = news_map.get(dt, [])
+            emb = encoder.encode(texts)
+            bullets = select_representative_bullets(texts, emb, k=3)
             rf = local_regime_from_summary(
                 summary,
-                news_bullets=[],
+                news_bullets=bullets,
                 backend="ollama",
-                model="llama3:latest")
+                model="llama3:latest",
+                temperature=0.0,
+            )
+
+            if t == CFG.window:
+                print("Sample bullets:", bullets)
+
             feat = rf.to_vector()
             cache[dt_str] = feat
-            new_lines.append({"date": dt_str, "summary": summary, "features": feat})
+            new_lines.append({"date": dt_str, "summary": summary,
+                              "bullets": bullets, "features": feat})
 
         rows.append(feat)
         idx.append(dt)
