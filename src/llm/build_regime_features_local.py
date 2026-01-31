@@ -6,7 +6,7 @@ import pandas as pd
 from src.config import CFG
 from src.llm.store import save_regime_store
 from src.llm.oracle_local import local_regime_from_summary
-from src.text.mock_news import load_mock_news
+from src.text.news_loader import load_news_map
 from src.text.encoder import NewsEncoder
 from src.text.select_bullets import select_representative_bullets
 
@@ -41,7 +41,7 @@ def main():
 
     news_df = load_news_features()
 
-    news_map = load_mock_news(ret_idx)
+    news_map = load_news_map(ret_idx)
     encoder = NewsEncoder(model_name="all-MiniLM-L6-v2", device="cpu")
 
 
@@ -57,9 +57,10 @@ def main():
     rows, idx = [], []
     new_lines = []
 
-    for t in range(CFG.window, len(rets) - 2):
-    # for t in range(CFG.window, min(len(rets) - 2, CFG.window + 5)):
+    # for t in range(CFG.window, len(rets) - 2):
+    for t in range(CFG.window, min(len(rets) - 2, CFG.window + 5)):
         dt = pd.to_datetime(ret_idx[t])
+        print(f"[build_local] date={dt.date()} start")
         dt_str = dt.strftime("%Y-%m-%d")
 
         window_rets = rets_np[t - CFG.window:t, :]
@@ -80,8 +81,10 @@ def main():
             feat = cache[dt_str]
         else:
             texts = news_map.get(dt, [])
+            print(f"[build_local] bullets={len(texts)}")
             emb = encoder.encode(texts)
             bullets = select_representative_bullets(texts, emb, k=3)
+            print(f"[build_local] selected_k={len(bullets)}")
             rf = local_regime_from_summary(
                 summary,
                 news_bullets=bullets,
@@ -89,7 +92,7 @@ def main():
                 model="llama3:latest",
                 temperature=0.0,
             )
-
+            print(f"[build_local] got_llm_json")
             if t == CFG.window:
                 print("Sample bullets:", bullets)
 
