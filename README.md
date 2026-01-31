@@ -43,6 +43,16 @@ prl rl train
 prl rl benchmarks
 ```
 
+Pipeline
+```bash
+prl pipeline data
+prl pipeline text
+prl pipeline regime --source heuristic
+prl pipeline student
+prl pipeline rl
+prl pipeline all --source heuristic
+```
+
 ## Notes
 
 - Large artifacts are intentionally excluded from git: artifacts/, .venv/.

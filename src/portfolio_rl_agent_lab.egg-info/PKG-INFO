@@ -56,6 +56,24 @@ uv run python -m portfolio_rl_agent_lab.eval.benchmarks
 uv run python -m portfolio_rl_agent_lab.eval.diagnostics
 ```
 
+CLI (after `uv sync`)
+```bash
+prl data download
+prl data news-alpaca --days 5
+prl rl train
+prl rl benchmarks
+```
+
+Pipeline
+```bash
+prl pipeline data
+prl pipeline text
+prl pipeline regime --source heuristic
+prl pipeline student
+prl pipeline rl
+prl pipeline all --source heuristic
+```
+
 ## Notes
 
 - Large artifacts are intentionally excluded from git: artifacts/, .venv/.

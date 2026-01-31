@@ -26,6 +26,9 @@ def main() -> None:
     p_teacher = sub.add_parser("teacher", help="Teacher/oracle feature builders")
     p_teacher.add_argument("args", nargs=argparse.REMAINDER)
 
+    p_pipeline = sub.add_parser("pipeline", help="Run end-to-end pipelines")
+    p_pipeline.add_argument("args", nargs=argparse.REMAINDER)
+
     args = parser.parse_args()
 
     if args.cmd == "data":
@@ -39,6 +42,9 @@ def main() -> None:
         _dispatch(m, args.args)
     elif args.cmd == "teacher":
         from portfolio_rl_agent_lab.cli.teacher import main as m
+        _dispatch(m, args.args)
+    elif args.cmd == "pipeline":
+        from portfolio_rl_agent_lab.cli.pipeline import main as m
         _dispatch(m, args.args)
     else:
         parser.error(f"Unknown command: {args.cmd}")
