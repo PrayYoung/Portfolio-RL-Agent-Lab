@@ -41,14 +41,17 @@ def compute_market_summary(window_rets: np.ndarray) -> dict:
     return {"mkt_mom": mkt_mom, "mkt_vol": mkt_vol, "mkt_mdd": mkt_mdd}
 
 
-def main():
+def build_regime_features_heuristic(
+    returns_path: str = "artifacts/data/processed/returns.parquet",
+    news_features_path: str = "artifacts/data/processed/news_features.parquet",
+) -> pd.DataFrame:
     os.makedirs("artifacts/data/processed", exist_ok=True)
 
-    rets = load_returns()
+    rets = load_returns(returns_path)
     rets_np = rets.to_numpy(dtype=np.float32)
 
     # Load text-derived features (Phase 1: 3-dim compressed features)
-    news_df = load_news_features()
+    news_df = load_news_features(news_features_path)
     ret_idx = pd.to_datetime(rets.index)
 
     rows = []
@@ -83,11 +86,16 @@ def main():
         columns=["regime", "confidence", "macro_risk", "equity_bias", "defensive_bias"],
     )
 
-    save_regime_store(df)
+    save_regime_store(df, path=CFG.regime_store_heuristic_path)
     print(
-        f"Saved regime features: {CFG.regime_store_path} | "
+        f"Saved regime features: {CFG.regime_store_heuristic_path} | "
         f"shape={df.shape} | {df.index.min()}..{df.index.max()}"
     )
+    return df
+
+
+def main():
+    build_regime_features_heuristic()
 
 
 if __name__ == "__main__":

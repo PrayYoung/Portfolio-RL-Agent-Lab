@@ -1,6 +1,6 @@
 # Portfolio-RL-Agent-Lab
 
-A research-oriented sandbox for building and evaluating a portfolio allocation agent trained with reinforcement learning (PPO), with an extensible “Regime Oracle” interface (heuristic / OpenAI / local vLLM) that produces structured regime features used by the RL policy.
+A research-oriented sandbox for building and evaluating a portfolio allocation agent trained with reinforcement learning (PPO), with an extensible “Regime Oracle” interface (heuristic / local vLLM) that produces structured regime features used by the RL policy.
 
 ## What’s in this repo
 
@@ -9,7 +9,6 @@ A research-oriented sandbox for building and evaluating a portfolio allocation a
 - **Evaluation**: backtest + benchmarks + diagnostics
 - **Regime Oracle (pluggable)**:
   - heuristic oracle (rule-based)
-  - OpenAI oracle (schema-like JSON, offline feature generation)
   - local vLLM oracle (OpenAI-compatible endpoint)
 
 ## Quickstart (uv)

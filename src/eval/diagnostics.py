@@ -7,12 +7,15 @@ from src.env.portfolio_env import PortfolioEnv
 def load_returns(path="artifacts/data/processed/returns.parquet"):
     return pd.read_parquet(path)
 
-def main():
-    returns = load_returns()
+def run_diagnostics(
+    returns_path: str = "artifacts/data/processed/returns.parquet",
+    model_path: str = "artifacts/models/ppo_portfolio",
+):
+    returns = load_returns(returns_path)
     split = int(len(returns) * 0.8)
     test_returns = returns.iloc[split:].copy()
 
-    model = PPO.load("artifacts/models/ppo_portfolio")
+    model = PPO.load(model_path)
 
     env = PortfolioEnv(test_returns, window=CFG.window, trading_cost_bps=CFG.trading_cost_bps, cash_asset=CFG.cash_asset)
     obs, _ = env.reset()
@@ -61,6 +64,17 @@ def main():
     print(f"Median turnover:   {np.median(turnovers):.3f}")
     print(f"Avg daily cost:    {costs.mean()*100:.3f}%")
     print(f"Avg daily ret:     {port_rets.mean()*100:.3f}%")
+    return {
+        "avg_w": avg_w,
+        "std_w": std_w,
+        "turnovers": turnovers,
+        "costs": costs,
+        "port_rets": port_rets,
+        "asset_names": asset_names,
+    }
+
+def main():
+    run_diagnostics()
 
 if __name__ == "__main__":
     main()

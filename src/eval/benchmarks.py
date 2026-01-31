@@ -107,12 +107,16 @@ def summarize(name: str, nav: np.ndarray, rets: np.ndarray):
     dd = max_drawdown(nav) * 100
     print(f"{name:>18} | Total {total:>7.2f}% | Sharpe {s:>5.2f} | MaxDD {dd:>7.2f}%")
 
-def main():
-    returns = load_returns()
+def run_benchmarks(
+    returns_path: str = "artifacts/data/processed/returns.parquet",
+    model_path: str = "artifacts/models/ppo_portfolio",
+    out_plot_path: str = "artifacts/data/processed/test_nav.png",
+):
+    returns = load_returns(returns_path)
     split = int(len(returns) * 0.8)
     test_returns = returns.iloc[split:].copy()
 
-    model = PPO.load("artifacts/models/ppo_portfolio")
+    model = PPO.load(model_path)
 
     nav_rl, rets_rl, dates = run_rl_policy(model, test_returns)
     nav_eq, rets_eq, _ = run_equal_weight_daily(test_returns)
@@ -140,8 +144,20 @@ def main():
     plt.ylabel("NAV")
     plt.legend()
     plt.tight_layout()
-    plt.savefig("artifacts/data/processed/test_nav.png", dpi=160)
-    print("\nSaved plot: artifacts/data/processed/test_nav.png")
+    plt.savefig(out_plot_path, dpi=160)
+    print(f"\nSaved plot: {out_plot_path}")
+    return {
+        "nav_rl": nav_rl,
+        "rets_rl": rets_rl,
+        "nav_eq": nav_eq,
+        "rets_eq": rets_eq,
+        "nav_bh": nav_bh,
+        "rets_bh": rets_bh,
+        "dates": dates,
+    }
+
+def main():
+    run_benchmarks()
 
 if __name__ == "__main__":
     main()

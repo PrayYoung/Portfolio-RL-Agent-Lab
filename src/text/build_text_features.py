@@ -7,14 +7,19 @@ from src.text.mock_news import load_mock_news
 from src.text.encoder import NewsEncoder
 from src.text.features import summarize_embeddings
 
-def main():
+def build_text_features(
+    returns_path: str = "artifacts/data/processed/returns.parquet",
+    out_path: str = "artifacts/data/processed/news_features.parquet",
+    model_name: str = "all-MiniLM-L6-v2",
+    device: str = "cpu",
+) -> pd.DataFrame:
     os.makedirs("artifacts/data/processed", exist_ok=True)
 
-    rets = pd.read_parquet("artifacts/data/processed/returns.parquet")
+    rets = pd.read_parquet(returns_path)
     idx = pd.to_datetime(rets.index)
 
     news_map = load_mock_news(idx)
-    encoder = NewsEncoder(model_name="all-MiniLM-L6-v2", device="cpu")
+    encoder = NewsEncoder(model_name=model_name, device=device)
 
     rows = []
     prev_emb = None
@@ -27,9 +32,12 @@ def main():
         prev_emb = emb
 
     df = pd.DataFrame(rows, index=idx).sort_index()
-    out_path = "artifacts/data/processed/news_features.parquet"
     df.to_parquet(out_path)
     print(f"Saved text features: {out_path} | shape={df.shape}")
+    return df
+
+def main():
+    build_text_features()
 
 if __name__ == "__main__":
     main()

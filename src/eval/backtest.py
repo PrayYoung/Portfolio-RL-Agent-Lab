@@ -34,13 +34,16 @@ def backtest(model, returns: pd.DataFrame):
     rets = np.array(rets)
     return nav, rets
 
-def main():
-    returns = load_returns()
+def run_backtest(
+    returns_path: str = "artifacts/data/processed/returns.parquet",
+    model_path: str = "artifacts/models/ppo_portfolio",
+):
+    returns = load_returns(returns_path)
     split = int(len(returns) * 0.8)
 
     test_returns = returns.iloc[split:].copy()
 
-    model = PPO.load("artifacts/models/ppo_portfolio")
+    model = PPO.load(model_path)
 
     nav, rets = backtest(model, test_returns)
 
@@ -48,6 +51,10 @@ def main():
     print(f"Total return: {(nav[-1]-1)*100:.2f}%")
     print(f"Annualized Sharpe (rough): {np.mean(rets)/np.std(rets)*np.sqrt(252):.2f}")
     print(f"Max Drawdown: {((nav/np.maximum.accumulate(nav))-1).min()*100:.2f}%")
+    return nav, rets
+
+def main():
+    run_backtest()
 
 if __name__ == "__main__":
     main()

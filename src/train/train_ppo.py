@@ -10,9 +10,14 @@ from src.env.portfolio_env import PortfolioEnv
 def load_returns(path="artifacts/data/processed/returns.parquet") -> pd.DataFrame:
     return pd.read_parquet(path)
 
-def main():
+def train_ppo(
+    returns_path: str = "artifacts/data/processed/returns.parquet",
+    model_path: str = "artifacts/models/ppo_portfolio",
+    tb_log_path: str = "artifacts/tb_logs",
+    total_timesteps: int = 200_000,
+) -> PPO:
     os.makedirs("artifacts/models", exist_ok=True)
-    rets = load_returns()
+    rets = load_returns(returns_path)
 
     # 80% train
     split = int(len(rets) * 0.8)
@@ -36,7 +41,7 @@ def main():
         env=env,
         verbose=1,
         policy_kwargs=policy_kwargs,
-        tensorboard_log="artifacts/tb_logs",
+        tensorboard_log=tb_log_path,
         n_steps=2048,
         batch_size=256,
         gamma=0.99,
@@ -44,10 +49,14 @@ def main():
         ent_coef=0.0,
     )
 
-    model.learn(total_timesteps=200_000,
+    model.learn(total_timesteps=total_timesteps,
                 tb_log_name="ppo_baseline")
-    model.save("artifacts/models/ppo_portfolio")
-    print("Saved model to artifacts/models/ppo_portfolio.zip")
+    model.save(model_path)
+    print(f"Saved model to {model_path}.zip")
+    return model
+
+def main():
+    train_ppo()
 
 if __name__ == "__main__":
     main()

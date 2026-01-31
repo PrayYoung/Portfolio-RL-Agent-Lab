@@ -62,18 +62,23 @@ class StudentMLP(torch.nn.Module):
         return self.net(x)
 
 
-def main():
+def build_regime_features_student(
+    returns_path: str = "artifacts/data/processed/returns.parquet",
+    news_features_path: str = "artifacts/data/processed/news_features.parquet",
+    ckpt_path: str = "artifacts/models/student_regime.pt",
+    out_path: str = "artifacts/data/processed/regime_features_student.parquet",
+) -> pd.DataFrame:
     os.makedirs("artifacts/data/processed", exist_ok=True)
 
     # ---------- load data ----------
-    rets = pd.read_parquet("artifacts/data/processed/returns.parquet")
+    rets = pd.read_parquet(returns_path)
     rets_np = rets.to_numpy(dtype=np.float32)
     idx = pd.to_datetime(rets.index)
 
-    news = pd.read_parquet("artifacts/data/processed/news_features.parquet")
+    news = pd.read_parquet(news_features_path)
     news.index = pd.to_datetime(news.index)
 
-    ckpt = torch.load("artifacts/models/student_regime.pt", map_location="cpu", weights_only=False)
+    ckpt = torch.load(ckpt_path, map_location="cpu", weights_only=False)
 
     mu = ckpt["mu"]
     sig = ckpt["sig"]
@@ -146,13 +151,15 @@ def main():
         columns=TARGET_COLUMNS,
     )
 
-    out_path = "artifacts/data/processed/regime_features_student.parquet"
     df.to_parquet(out_path)
     print(
         f"Saved student regime features: {out_path} | "
         f"shape={df.shape} | {df.index.min()}..{df.index.max()}"
     )
+    return df
 
+def main():
+    build_regime_features_student()
 
 if __name__ == "__main__":
     main()

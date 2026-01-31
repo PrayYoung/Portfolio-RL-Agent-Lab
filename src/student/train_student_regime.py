@@ -33,10 +33,16 @@ def standardize(train_x: np.ndarray, x: np.ndarray):
     return (x - mu) / sig, mu, sig
 
 
-def main():
+def train_student_regime(
+    dataset_path: str = "artifacts/data/processed/student_dataset.parquet",
+    out_path: str = "artifacts/models/student_regime.pt",
+    epochs: int = 50,
+    batch_size: int = 64,
+    lr: float = 1e-3,
+) -> None:
     os.makedirs("artifacts/models", exist_ok=True)
 
-    df = pd.read_parquet("artifacts/data/processed/student_dataset.parquet").sort_index()
+    df = pd.read_parquet(dataset_path).sort_index()
 
     # Simple time split: last 20% as validation
     n = len(df)
@@ -54,17 +60,17 @@ def main():
     train_ds = TensorDataset(torch.from_numpy(x_train_std), torch.from_numpy(y_train))
     val_ds = TensorDataset(torch.from_numpy(x_val_std), torch.from_numpy(y_val))
 
-    train_loader = DataLoader(train_ds, batch_size=64, shuffle=True)
+    train_loader = DataLoader(train_ds, batch_size=batch_size, shuffle=True)
     val_loader = DataLoader(val_ds, batch_size=256, shuffle=False)
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = StudentMLP(in_dim=x.shape[1], out_dim=y.shape[1]).to(device)
 
-    opt = torch.optim.Adam(model.parameters(), lr=1e-3)
+    opt = torch.optim.Adam(model.parameters(), lr=lr)
     loss_fn = nn.MSELoss()
 
     best_val = float("inf")
-    for epoch in range(1, 51):
+    for epoch in range(1, epochs + 1):
         model.train()
         train_losses = []
         for xb, yb in train_loader:
@@ -97,10 +103,12 @@ def main():
                 "features": FEATURES,
                 "targets": TARGETS,
             }
-            torch.save(ckpt, "artifacts/models/student_regime.pt")
+            torch.save(ckpt, out_path)
 
-    print("Saved: artifacts/models/student_regime.pt")
+    print(f"Saved: {out_path}")
 
+def main():
+    train_student_regime()
 
 if __name__ == "__main__":
     main()
