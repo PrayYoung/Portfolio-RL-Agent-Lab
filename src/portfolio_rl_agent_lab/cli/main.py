@@ -29,6 +29,9 @@ def main() -> None:
     p_pipeline = sub.add_parser("pipeline", help="Run end-to-end pipelines")
     p_pipeline.add_argument("args", nargs=argparse.REMAINDER)
 
+    p_infer = sub.add_parser("infer", help="Policy inference")
+    p_infer.add_argument("args", nargs=argparse.REMAINDER)
+
     args = parser.parse_args()
 
     if args.cmd == "data":
@@ -45,6 +48,9 @@ def main() -> None:
         _dispatch(m, args.args)
     elif args.cmd == "pipeline":
         from portfolio_rl_agent_lab.cli.pipeline import main as m
+        _dispatch(m, args.args)
+    elif args.cmd == "infer":
+        from portfolio_rl_agent_lab.cli.infer import main as m
         _dispatch(m, args.args)
     else:
         parser.error(f"Unknown command: {args.cmd}")

@@ -1,15 +1,38 @@
 # Portfolio-RL-Agent-Lab
 
-A research-oriented sandbox for building and evaluating a portfolio allocation agent trained with reinforcement learning (PPO), with an extensible “Regime Oracle” interface (heuristic / local vLLM) that produces structured regime features used by the RL policy.
+A research-oriented sandbox for building and evaluating a **portfolio allocation agent** trained with **PPO**. The agent can consume **regime features** from a pluggable “Regime Oracle” (heuristic or local LLM) and is evaluated with backtests and diagnostics.
 
-## What’s in this repo
+## Why this repo
 
-- **RL portfolio environment**: daily multi-asset allocation with transaction costs
-- **Training**: PPO (Stable-Baselines3)
-- **Evaluation**: backtest + benchmarks + diagnostics
-- **Regime Oracle (pluggable)**:
-  - heuristic oracle (rule-based)
-  - local vLLM oracle (OpenAI-compatible endpoint)
+- End-to-end RL workflow for daily portfolio allocation
+- Pluggable regime features (heuristic or local LLM)
+- Clear data → features → regime → train → eval pipeline
+
+## Architecture (high level)
+
+```mermaid
+flowchart LR
+  A[Market Data] --> B[Returns]
+  B --> C[Text Features]
+  C --> D[Regime Oracle]
+  B --> D
+  D --> E[RL Environment]
+  E --> F[PPO Training]
+  F --> G[Backtest & Diagnostics]
+```
+
+## Repository layout
+
+- `portfolio_rl_agent_lab/data/` — data download + dataset building
+- `portfolio_rl_agent_lab/text/` — news loading + text feature extraction
+- `portfolio_rl_agent_lab/llm/` — regime feature builders (heuristic/local LLM)
+- `portfolio_rl_agent_lab/student/` — student model pipeline
+- `portfolio_rl_agent_lab/env/` — portfolio environment
+- `portfolio_rl_agent_lab/train/` — PPO training
+- `portfolio_rl_agent_lab/eval/` — backtest, benchmarks, diagnostics
+- `portfolio_rl_agent_lab/pipeline/` — orchestrated pipelines
+- `portfolio_rl_agent_lab/cli/` — CLI entrypoints
+- `artifacts/` — generated data/models/logs (gitignored)
 
 ## Quickstart (uv)
 
@@ -19,23 +42,22 @@ source .venv/bin/activate
 uv sync
 ```
 
-Build offline regime features (heuristic)
+### Minimal run (heuristic regime)
+
 ```bash
+uv run python -m portfolio_rl_agent_lab.data.download
+uv run python -m portfolio_rl_agent_lab.data.make_dataset
+uv run python -m portfolio_rl_agent_lab.text.build_text_features
 uv run python -m portfolio_rl_agent_lab.llm.build_regime_features
-```
-
-Train
-```bash
 uv run python -m portfolio_rl_agent_lab.train.train_ppo
-```
-
-Evaluate
-```bash
 uv run python -m portfolio_rl_agent_lab.eval.benchmarks
 uv run python -m portfolio_rl_agent_lab.eval.diagnostics
 ```
 
-CLI (after `uv sync`)
+## CLI
+
+After `uv sync`, the `prl` command is available. If you don’t want to install the script, use the module form: `uv run python -m portfolio_rl_agent_lab.cli ...`.
+
 ```bash
 prl data download
 prl data news-alpaca --days 5
@@ -43,7 +65,8 @@ prl rl train
 prl rl benchmarks
 ```
 
-Pipeline
+## Pipeline
+
 ```bash
 prl pipeline data
 prl pipeline text
@@ -53,7 +76,30 @@ prl pipeline rl
 prl pipeline all --source heuristic
 ```
 
+## Inference (single date)
+
+```bash
+prl infer run --model artifacts/models/ppo_portfolio --asof 2025-12-31
+```
+
+Live Yahoo data (latest available date)
+```bash
+prl infer run --live-yahoo --lookback-days 180
+```
+
+Real-time regime (heuristic)
+```bash
+prl infer run --live-yahoo --lookback-days 180 --regime-source heuristic
+```
+
+Real-time regime (local LLM + live news)
+```bash
+prl infer run --live-yahoo --live-news --regime-source local --news-lookback-days 5
+```
+
+Note: use the same ticker order as the model was trained on (defaults to `CFG.tickers`).
+
 ## Notes
 
-- Large artifacts are intentionally excluded from git: artifacts/, .venv/.
-- The Regime Oracle is designed to be swappable without changing the RL env/policy code.
+- Large artifacts are excluded from git: `artifacts/`, `.venv/`
+- Regime Oracle is swappable without touching env/policy logic

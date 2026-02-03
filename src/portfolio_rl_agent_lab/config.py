@@ -15,7 +15,7 @@ class Config:
     turnover_lambda: float = 0.1
     use_regime_features: bool = True   # default turned off
     regime_dim: int = 5                 # C1 features: [regime, conf, macro_risk, equity_bias, defensive_bias]
-    regime_source = "llm"         # Regime feature source: "heuristic" | "llm" | "student"
+    regime_source = "heuristic"   # Regime feature source: "heuristic" | "local" | "student"
     regime_store_path = "artifacts/data/processed/regime_features.parquet"
     regime_store_student_path = "artifacts/data/processed/regime_features_student.parquet"
     regime_store_heuristic_path = "artifacts/data/processed/regime_features_heuristic.parquet"

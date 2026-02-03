@@ -6,12 +6,14 @@ def load_regime_store() -> pd.DataFrame:
     Load regime features store based on CFG.regime_source.
     Returned df index must be DatetimeIndex.
     """
-    src = getattr(CFG, "regime_source", "llm")
+    src = getattr(CFG, "regime_source", "heuristic")
 
     if src == "student":
         path = CFG.regime_store_student_path
     elif src == "heuristic":
         path = CFG.regime_store_heuristic_path
+    elif src == "local":
+        path = CFG.regime_store_path
     else:
         path = CFG.regime_store_path
 

@@ -16,7 +16,7 @@ def cmd_news_alpaca(args):
     # Minimal approach: temporarily patch by setting a global, or better:
     # Refactor build_news_daily_alpaca.main to accept days/symbols later (Phase 2).
     # For now, just run main and keep behavior unchanged.
-    alpaca_main()
+    alpaca_main(lookback_days=args.days)
 
 
 def main():
