@@ -1,18 +1,19 @@
 <!-- <p align="center">
   <img src="assets/logo.png" width="300" />
-</p>
- -->
-<h1 align="center">R²PA</h1>
+</p> -->
+
+<h1 align="center">R²PA: Regime-aware Reinforcement Learning for Portfolio Allocation</h1>
 
 <p align="center">
-  <b>Regime-aware Reinforcement Learning for Portfolio Allocation</b>
-</p>
-
-<p align="center">
-  <sub>
-    A research-oriented RL system for regime-conditioned portfolio decision making<br/>
-    <i>implemented in <code>Portfolio-RL-Agent-Lab</code></i>
-  </sub>
+  <a href="LICENSE">
+    <img src="https://img.shields.io/badge/license-MIT-green.svg">
+  </a>
+  <a href="https://github.com/PrayYoung/Portfolio-RL-Agent-Lab/stargazers">
+    <img src="https://img.shields.io/github/stars/PrayYoung/Portfolio-RL-Agent-Lab?style=flat">
+  </a>
+  <a href="https://github.com/PrayYoung/Portfolio-RL-Agent-Lab/issues">
+    <img src="https://img.shields.io/github/issues/PrayYoung/Portfolio-RL-Agent-Lab">
+  </a>
 </p>
 
 R²PA is a **research-oriented reinforcement learning system** for portfolio allocation under **latent market regimes**.
