@@ -20,8 +20,7 @@ dependencies = [
 ]
 
 [project.scripts]
-prl = "portfolio_rl_agent_lab.cli.main:main"
-portfolio-rl-agent-lab = "portfolio_rl_agent_lab.cli.main:main"
+r2pa = "portfolio_rl_agent_lab.cli.main:main"
 
 [build-system]
 requires = ["setuptools>=69"]

@@ -19,18 +19,77 @@ Requires-Dist: tqdm>=4.67.1
 Requires-Dist: yfinance>=1.1.0
 Dynamic: license-file
 
-# Portfolio-RL-Agent-Lab
+<!-- <p align="center">
+  <img src="assets/logo.png" width="300" />
+</p> -->
 
-A research-oriented sandbox for building and evaluating a portfolio allocation agent trained with reinforcement learning (PPO), with an extensible “Regime Oracle” interface (heuristic / local vLLM) that produces structured regime features used by the RL policy.
+<h1 align="center">R²PA: Regime-aware Reinforcement Learning for Portfolio Allocation</h1>
 
-## What’s in this repo
+<p align="center">
+  <a href="LICENSE">
+    <img src="https://img.shields.io/badge/license-MIT-green.svg">
+  </a>
+  <a href="https://github.com/PrayYoung/Portfolio-RL-Agent-Lab/stargazers">
+    <img src="https://img.shields.io/github/stars/PrayYoung/Portfolio-RL-Agent-Lab?style=flat">
+  </a>
+  <a href="https://github.com/PrayYoung/Portfolio-RL-Agent-Lab/issues">
+    <img src="https://img.shields.io/github/issues/PrayYoung/Portfolio-RL-Agent-Lab">
+  </a>
+</p>
 
-- **RL portfolio environment**: daily multi-asset allocation with transaction costs
-- **Training**: PPO (Stable-Baselines3)
-- **Evaluation**: backtest + benchmarks + diagnostics
-- **Regime Oracle (pluggable)**:
-  - heuristic oracle (rule-based)
-  - local vLLM oracle (OpenAI-compatible endpoint)
+R²PA is a **research-oriented reinforcement learning system** for portfolio allocation under **latent market regimes**.
+
+The core idea is to **separate expensive regime inference from downstream decision learning**:
+
+- Market regimes are inferred by a pluggable **Regime Oracle** (heuristics or local LLMs)
+- Regime signals are consumed as structured state by an RL portfolio policy (**PPO/A2C/SAC/TD3**)
+- Training-time intelligence is decoupled from inference-time execution
+
+This repo serves as a sandbox for studying **regime-aware decision policies**, not as a trading bot or alpha signal generator.
+
+## Why R²PA
+
+Most RL trading examples attempt to learn market structure end-to-end from price data.
+R²PA instead treats **market regime as an explicit latent state**, supplied by an external oracle
+and used to condition portfolio decisions.
+
+This repo is designed to explore:
+
+- **Regime-aware portfolio allocation** rather than price prediction
+- **Teacher / oracle → policy** decoupling for realistic deployment constraints
+- A clean, artifact-driven pipeline from data to evaluation
+
+
+## Architecture (high level)
+
+```mermaid
+flowchart LR
+    A[Market Data] --> B[Returns]
+    A --> C[Text / News Features]
+
+    B --> D[Regime Oracle]
+    C --> D
+
+    D -->|Regime Signals| E[RL Environment]
+    B --> E
+
+    E --> F[RL Policy Training]
+    F --> G[Backtest & Diagnostics]
+```
+
+## Repository layout
+
+- `src/portfolio_rl_agent_lab/data/` - download market data and build returns
+- `src/portfolio_rl_agent_lab/text/` - news fetching, loading, and text features
+- `src/portfolio_rl_agent_lab/llm/` - regime oracles and regime-feature builders
+- `src/portfolio_rl_agent_lab/student/` - teacher-student distillation pipeline
+- `src/portfolio_rl_agent_lab/env/` - portfolio environment definition
+- `src/portfolio_rl_agent_lab/train/` - RL training entrypoints (`ppo/a2c/sac/td3`)
+- `src/portfolio_rl_agent_lab/eval/` - backtest, benchmarks, diagnostics
+- `src/portfolio_rl_agent_lab/infer/` - single-date allocation inference
+- `src/portfolio_rl_agent_lab/pipeline/` - end-to-end workflow orchestration
+- `src/portfolio_rl_agent_lab/cli/` - user-facing CLI (`r2pa ...`)
+- `artifacts/` - generated data/models/logs (gitignored)
 
 ## Quickstart (uv)
 
@@ -40,41 +99,91 @@ source .venv/bin/activate
 uv sync
 ```
 
-Build offline regime features (heuristic)
+## Fast start (recommended)
+
 ```bash
+uv run python -m portfolio_rl_agent_lab.data.download
+uv run python -m portfolio_rl_agent_lab.data.make_dataset
+uv run python -m portfolio_rl_agent_lab.text.build_text_features
 uv run python -m portfolio_rl_agent_lab.llm.build_regime_features
-```
-
-Train
-```bash
-uv run python -m portfolio_rl_agent_lab.train.train_ppo
-```
-
-Evaluate
-```bash
+uv run python -m portfolio_rl_agent_lab.train.train_rl --algo ppo
 uv run python -m portfolio_rl_agent_lab.eval.benchmarks
 uv run python -m portfolio_rl_agent_lab.eval.diagnostics
 ```
 
-CLI (after `uv sync`)
+## Core workflows
+
+Train with different RL algorithms:
+
 ```bash
-prl data download
-prl data news-alpaca --days 5
-prl rl train
-prl rl benchmarks
+r2pa rl train --algo ppo
+r2pa rl train --algo a2c
+r2pa rl train --algo sac
+r2pa rl train --algo td3
 ```
 
-Pipeline
+Evaluate a trained model:
+
 ```bash
-prl pipeline data
-prl pipeline text
-prl pipeline regime --source heuristic
-prl pipeline student
-prl pipeline rl
-prl pipeline all --source heuristic
+r2pa rl benchmarks --algo ppo --model artifacts/models/ppo_portfolio
+r2pa rl diagnostics --algo ppo --model artifacts/models/ppo_portfolio
+r2pa rl backtest --algo ppo --model artifacts/models/ppo_portfolio
 ```
+
+Run inference for one date:
+
+```bash
+r2pa infer run --algo ppo --model artifacts/models/ppo_portfolio --asof 2025-12-31
+```
+
+## CLI usage
+
+- Main command: `r2pa`
+- Module fallback: `uv run python -m portfolio_rl_agent_lab.cli ...`
+- Legacy fallback: `python main.py ...` (delegates to the same CLI)
+
+```bash
+r2pa data download
+r2pa data news-alpaca --days 5
+r2pa rl train --algo ppo
+r2pa rl benchmarks --algo ppo
+```
+
+## Pipeline commands
+
+```bash
+r2pa pipeline data
+r2pa pipeline text
+r2pa pipeline regime --source heuristic
+r2pa pipeline student
+r2pa pipeline rl --algo ppo
+r2pa pipeline all --source heuristic --algo ppo
+```
+
+## Live inference examples
+
+```bash
+r2pa infer run --model artifacts/models/ppo_portfolio --algo ppo --asof 2025-12-31
+```
+
+Live Yahoo prices (latest date in downloaded window):
+```bash
+r2pa infer run --live-yahoo --lookback-days 180
+```
+
+Live Yahoo + real-time heuristic regime:
+```bash
+r2pa infer run --live-yahoo --lookback-days 180 --regime-source heuristic
+```
+
+Live Yahoo + live news + local LLM regime:
+```bash
+r2pa infer run --live-yahoo --live-news --regime-source local --news-lookback-days 5
+```
+
+Use the same ticker order as training (defaults to `CFG.tickers`).
 
 ## Notes
 
-- Large artifacts are intentionally excluded from git: artifacts/, .venv/.
-- The Regime Oracle is designed to be swappable without changing the RL env/policy code.
+- Large artifacts are excluded from git: `artifacts/`, `.venv/`
+- Regime Oracle is swappable without touching env/policy logic

@@ -67,7 +67,7 @@ flowchart LR
 - `src/portfolio_rl_agent_lab/eval/` - backtest, benchmarks, diagnostics
 - `src/portfolio_rl_agent_lab/infer/` - single-date allocation inference
 - `src/portfolio_rl_agent_lab/pipeline/` - end-to-end workflow orchestration
-- `src/portfolio_rl_agent_lab/cli/` - user-facing CLI (`prl ...`)
+- `src/portfolio_rl_agent_lab/cli/` - user-facing CLI (`r2pa ...`)
 - `artifacts/` - generated data/models/logs (gitignored)
 
 ## Quickstart (uv)
@@ -95,69 +95,68 @@ uv run python -m portfolio_rl_agent_lab.eval.diagnostics
 Train with different RL algorithms:
 
 ```bash
-prl rl train --algo ppo
-prl rl train --algo a2c
-prl rl train --algo sac
-prl rl train --algo td3
+r2pa rl train --algo ppo
+r2pa rl train --algo a2c
+r2pa rl train --algo sac
+r2pa rl train --algo td3
 ```
 
 Evaluate a trained model:
 
 ```bash
-prl rl benchmarks --algo ppo --model artifacts/models/ppo_portfolio
-prl rl diagnostics --algo ppo --model artifacts/models/ppo_portfolio
-prl rl backtest --algo ppo --model artifacts/models/ppo_portfolio
+r2pa rl benchmarks --algo ppo --model artifacts/models/ppo_portfolio
+r2pa rl diagnostics --algo ppo --model artifacts/models/ppo_portfolio
+r2pa rl backtest --algo ppo --model artifacts/models/ppo_portfolio
 ```
 
 Run inference for one date:
 
 ```bash
-prl infer run --algo ppo --model artifacts/models/ppo_portfolio --asof 2025-12-31
+r2pa infer run --algo ppo --model artifacts/models/ppo_portfolio --asof 2025-12-31
 ```
 
 ## CLI usage
 
-- Main command: `prl`
+- Main command: `r2pa`
 - Module fallback: `uv run python -m portfolio_rl_agent_lab.cli ...`
-- Legacy fallback: `python main.py ...` (delegates to the same CLI)
 
 ```bash
-prl data download
-prl data news-alpaca --days 5
-prl rl train --algo ppo
-prl rl benchmarks --algo ppo
+r2pa data download
+r2pa data news-alpaca --days 5
+r2pa rl train --algo ppo
+r2pa rl benchmarks --algo ppo
 ```
 
 ## Pipeline commands
 
 ```bash
-prl pipeline data
-prl pipeline text
-prl pipeline regime --source heuristic
-prl pipeline student
-prl pipeline rl --algo ppo
-prl pipeline all --source heuristic --algo ppo
+r2pa pipeline data
+r2pa pipeline text
+r2pa pipeline regime --source heuristic
+r2pa pipeline student
+r2pa pipeline rl --algo ppo
+r2pa pipeline all --source heuristic --algo ppo
 ```
 
 ## Live inference examples
 
 ```bash
-prl infer run --model artifacts/models/ppo_portfolio --algo ppo --asof 2025-12-31
+r2pa infer run --model artifacts/models/ppo_portfolio --algo ppo --asof 2025-12-31
 ```
 
 Live Yahoo prices (latest date in downloaded window):
 ```bash
-prl infer run --live-yahoo --lookback-days 180
+r2pa infer run --live-yahoo --lookback-days 180
 ```
 
 Live Yahoo + real-time heuristic regime:
 ```bash
-prl infer run --live-yahoo --lookback-days 180 --regime-source heuristic
+r2pa infer run --live-yahoo --lookback-days 180 --regime-source heuristic
 ```
 
 Live Yahoo + live news + local LLM regime:
 ```bash
-prl infer run --live-yahoo --live-news --regime-source local --news-lookback-days 5
+r2pa infer run --live-yahoo --live-news --regime-source local --news-lookback-days 5
 ```
 
 Use the same ticker order as training (defaults to `CFG.tickers`).

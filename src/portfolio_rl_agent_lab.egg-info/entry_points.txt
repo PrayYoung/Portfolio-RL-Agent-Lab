@@ -1,3 +1,2 @@
 [console_scripts]
-portfolio-rl-agent-lab = portfolio_rl_agent_lab.cli.main:main
-prl = portfolio_rl_agent_lab.cli.main:main
+r2pa = portfolio_rl_agent_lab.cli.main:main
